@@ -4,6 +4,7 @@ from app.db.database import Base, engine, SessionLocal, get_db
 from app.schemas.url import URLCreate, URLResponse
 from app.models.url import URL
 from sqlalchemy.orm import Session
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
@@ -22,3 +23,5 @@ def create_url(url: URLCreate, db: Session = Depends(get_db)):
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the URL Shortener API"}
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
