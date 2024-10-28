@@ -38,3 +38,6 @@ dmypy.json
 
 # VS Code settings
 .vscode/
+
+# Database
+*.db
