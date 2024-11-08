@@ -1,3 +1,5 @@
+# main.py
+
 from fastapi import FastAPI, Depends
 from app.api.routes import router
 from app.db.database import Base, engine, SessionLocal, get_db
@@ -5,11 +7,13 @@ from app.schemas.url import URLCreate, URLResponse
 from app.models.url import URL
 from sqlalchemy.orm import Session
 
-app = FastAPI()
-
-@app.on_event("startup")  # Corrected decorator
-def on_startup():
+async def lifespan(app: FastAPI):
+    # Create tables on startup
     Base.metadata.create_all(bind=engine)
+    yield
+    # You can also include shutdown events here if needed
+
+app = FastAPI(lifespan=lifespan)
 
 @app.post("/urls/", response_model=URLResponse)
 def create_url(url: URLCreate, db: Session = Depends(get_db)):

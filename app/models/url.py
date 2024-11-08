@@ -1,3 +1,5 @@
+# models.url.py
+
 from sqlalchemy import Column, Integer, String
 from app.db.database import Base
 from pydantic import BaseModel
@@ -25,4 +27,4 @@ class URLResponse(URLBase):
     clicks: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

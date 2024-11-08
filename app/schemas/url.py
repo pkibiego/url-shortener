@@ -1,3 +1,5 @@
+# schemas.url.py
+
 from pydantic import BaseModel
 
 class URLCreate(BaseModel):
@@ -9,4 +11,4 @@ class URLResponse(BaseModel):
     short_url: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
