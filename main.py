@@ -137,9 +137,16 @@ async def landing(request: Request, db: Session = Depends(get_db)):
 # URL redirection route
 @app.get("/{short_url}")
 async def redirect_to_original(short_url: str, db: Session = Depends(get_db)):
+    # Retrieve the original URL from the database
     original_url = get_url(db=db, short_url=short_url)
 
+    # If the short URL doesn't exist, redirect to homepage
     if not original_url:
-        return {"error": "Shortened URL not found"}
-
+        return RedirectResponse(url="/")
+    
+    # If found, redirect to the original URL
     return RedirectResponse(url=original_url)
+
+@app.get("/{path_name:path}")
+async def catch_all(path_name: str):
+    return RedirectResponse(url="/")
