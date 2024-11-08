@@ -78,6 +78,7 @@ async def login_page(request: Request):
     user_authenticated = is_user_authenticated(request)
     return templates.TemplateResponse("login.html", {"request": request, "user_authenticated": user_authenticated})
 
+"""
 @app.post("/login")
 async def login(
     email: str = Form(...),
@@ -131,6 +132,7 @@ async def landing(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Error: {e}")
         return RedirectResponse(url="/login")
+"""
 
 # URL redirection route
 @app.get("/{short_url}")
