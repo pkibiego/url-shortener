@@ -1,8 +1,6 @@
-# test_url_shortener.py
-
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+from app.main import app
 
 client = TestClient(app)
 
@@ -11,4 +9,9 @@ def test_read_root():
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to the URL Shortener API"}
 
-# Add more tests for creating and redirecting URLs
+def test_create_url():
+    response = client.post("/urls/", json={"original_url": "https://nation.africa"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "short_url" in data
+    assert data["original_url"] == "https://nation.africa"

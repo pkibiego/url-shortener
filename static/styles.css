@@ -1,0 +1,34 @@
+body {
+    background-color: #f9f9f9;
+    font-family: 'Roboto', sans-serif;
+}
+
+h1, h2 {
+    color: #00796b;
+}
+
+#original-url {
+    margin-bottom: 20px;
+}
+
+.collection .collection-item {
+    font-size: 1.2em;
+    color: #424242;
+}
+
+.collection .collection-item a {
+    color: #00796b;
+    text-decoration: none;
+}
+
+.collection .collection-item a:hover {
+    text-decoration: underline;
+}
+
+.btn {
+    background-color: #00796b;
+}
+
+.btn:hover {
+    background-color: #004d40;
+}
