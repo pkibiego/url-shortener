@@ -1,4 +1,4 @@
-# models.url.py
+# app/models/url.py
 
 from sqlalchemy import Column, Integer, String
 from app.db.database import Base
@@ -28,3 +28,6 @@ class URLResponse(URLBase):
 
     class Config:
         from_attributes = True
+
+class URLRequest(BaseModel):
+    original_url: str

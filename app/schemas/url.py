@@ -1,4 +1,4 @@
-# schemas.url.py
+# app/schemas/url.py
 
 from pydantic import BaseModel
 

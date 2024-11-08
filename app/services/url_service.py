@@ -1,3 +1,5 @@
+# services/url_service.py
+
 from sqlalchemy.orm import Session
 from app.models.url import URL
 from app.schemas.url import URLCreate
@@ -22,10 +24,11 @@ def create_url(db: Session, url_create: URLCreate) -> URL:
     db.refresh(db_url)
     return db_url
 
-def get_url(db: Session, short_url: str) -> URL:
-    """Retrieve a URL by its short version, increment clicks if found."""
-    db_url = db.query(URL).filter(URL.short_url == short_url).first()
-    if db_url:
-        db_url.clicks += 1
+def get_url(db: Session, short_url: str) -> str:
+    # Query the database for the short URL
+    url = db.query(URL).filter(URL.short_url == short_url).first()
+    if url:
+        url.clicks += 1  # Increment click count
         db.commit()
-    return db_url
+        return url.original_url  # Return the original URL if found
+    return None  # Return None if not found

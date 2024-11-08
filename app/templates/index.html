@@ -8,12 +8,13 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">URL Shortener</h1>
+        <h1 class="text-center">No Frills URL Shortener</h1>
         
         <form id="url-form" class="mt-4">
             <div class="mb-3">
                 <label for="original_url" class="form-label">Enter your URL</label>
-                <input type="url" class="form-control" id="original_url" placeholder="https://example.com" required>
+                <!-- Change the input type to 'text' instead of 'url' -->
+                <input type="text" class="form-control" id="original_url" placeholder="example.com" required>
             </div>
             <button type="submit" class="btn btn-primary">Shorten URL</button>
         </form>
@@ -26,31 +27,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const form = document.getElementById('url-form');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const original_url = document.getElementById('original_url').value;
-
-            // Send URL to the backend to get shortened URL
-            const response = await fetch('/shorten/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ original_url }),
-            });
-
-            const data = await response.json();
-
-            // Display the result
-            document.getElementById('original_url_display').textContent = data.original_url;
-            const shortUrl = document.getElementById('short_url_display');
-            shortUrl.textContent = data.short_url;
-            shortUrl.href = data.short_url;
-
-            document.getElementById('result').style.display = 'block';
-        });
-    </script>
+    <script src="/static/scripts.js"></script>  <!-- Reference to your static JS file -->
 </body>
 </html>
