@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+{% extends "base.html" %}
+
+{% block content %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Shortener</title>
+    <title>No Frills URL Shortener</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -18,7 +21,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Shorten URL</button>
         </form>
-
+        
         <div id="result" class="mt-4" style="display:none;">
             <h3>Shortened URL</h3>
             <p><strong>Original URL:</strong> <span id="original_url_display"></span></p>
@@ -26,7 +29,20 @@
         </div>
     </div>
 
+        <!-- Introductory Text Below the Form -->
+        <div class="mt-5">
+            <h4>Welcome to the Simple URL Shortener!</h4>
+            <p>Easily shorten any URL for quick sharing. Simply enter your link, and we’ll generate a shortened version that’s easier to share and track.</p>
+            <p><strong>Registering with us</strong> gives you access to advanced features, including the ability to see detailed click statistics and track the locations of people accessing your links. Monitor your links' performance and optimize your sharing strategy with insightful data at your fingertips!</p>
+
+            <!-- Call to Action Button -->
+            <div class="text-center mt-4">
+                <a href="/login" class="btn btn-success">Login or Register to Track Your Links</a>
+            </div>
+        </div>
+        <br />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/scripts.js"></script>  <!-- Reference to your static JS file -->
 </body>
+{% endblock %}
 </html>

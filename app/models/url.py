@@ -1,6 +1,7 @@
 # app/models/url.py
 
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from app.db.database import Base
 from pydantic import BaseModel
 
@@ -9,9 +10,12 @@ class URL(Base):
     __tablename__ = "urls"
 
     id = Column(Integer, primary_key=True, index=True)
-    original_url = Column(String, nullable=False)
-    short_url = Column(String, unique=True, index=True, nullable=False)
+    original_url = Column(String, index=True)
+    short_url = Column(String, unique=True, index=True)
     clicks = Column(Integer, default=0)
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="urls")
 
 # Pydantic model for base data structure
 class URLBase(BaseModel):
@@ -31,3 +35,4 @@ class URLResponse(URLBase):
 
 class URLRequest(BaseModel):
     original_url: str
+

@@ -1,6 +1,4 @@
-# main.py
-
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, Form, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.api.routes import router
@@ -9,62 +7,137 @@ from app.schemas.url import URLCreate, URLResponse
 from app.models.url import URL
 from sqlalchemy.orm import Session
 from app.services.url_service import generate_short_url, get_url
-from app.api.routes import router
+from app.schemas.user import UserCreate
+from app.models.users import User
+from app.services.user_service import create_user
+from app.auth.authentication import hash_password, get_user_by_email, verify_jwt_token, create_access_token, verify_password
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+# App initialization
 async def lifespan(app: FastAPI):
-    # Create tables on startup
     Base.metadata.create_all(bind=engine)
     yield
-    # You can also include shutdown events here if needed
 
 app = FastAPI(lifespan=lifespan)
-
-# Include the router with the defined routes
-app.include_router(router, prefix="/api")  # This adds the routes under "/api"
+app.include_router(router, prefix="/api")
 
 templates = Jinja2Templates(directory="app/templates")
-# Serve static files from the 'static' directory
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "app" / "static"), name="static")
 
-@app.post("/urls/", response_model=URLResponse)
-def create_url(url: URLCreate, db: Session = Depends(get_db)):
-    db_url = URL(original_url=url.original_url, short_url=generate_short_url())  # Replace "short_link" with actual logic
-    db.add(db_url)
-    db.commit()
-    db.refresh(db_url)
-    return db_url
+# Helper function to check user authentication
+def is_user_authenticated(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        return False
+    try:
+        verify_jwt_token(token.split(" ")[1])
+        return True
+    except Exception:
+        return False
 
-"""
-@app.get("/")
-async def read_root():
-    return {"message": "Welcome to the URL Shortener API"}
-"""
-
-url_mapping = {}
-
+# Index route
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    user_authenticated = is_user_authenticated(request)
 
-@app.post("/shorten-url", response_model=URLResponse)
-async def shorten_url(url_create: URLCreate, db: Session = Depends(get_db)):
-    db_url = create_url(db=db, url_create=url_create)
-    
-    # Check if the URL was saved successfully
-    if db_url:
-        return URLResponse(id=db_url.id, original_url=db_url.original_url, short_url=db_url.short_url, clicks=db_url.clicks)
-    else:
-        return {"error": "Failed to shorten URL"}
+    # Redirect to /landing if the user is already logged in
+    if user_authenticated:
+        return RedirectResponse(url="/landing")
 
+    return templates.TemplateResponse("index.html", {"request": request, "user_authenticated": user_authenticated})
+
+# Registration route
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request, "user_authenticated": False})
+
+@app.post("/register")
+async def register_user(
+    email: str = Form(...),
+    password: str = Form(...),
+    confirm_password: str = Form(...),
+    nickname: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    if password != confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
+
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+
+    hashed_password = hash_password(password)
+    user_create = UserCreate(email=email, hashed_password=hashed_password, nickname=nickname)
+    user = create_user(db, user_create)
+    return {"message": "User registered successfully", "user_id": user.id}
+
+# Login route
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    user_authenticated = is_user_authenticated(request)
+    return templates.TemplateResponse("login.html", {"request": request, "user_authenticated": user_authenticated})
+
+@app.post("/login")
+async def login(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user = get_user_by_email(db, email)
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+
+    token = create_access_token(data={"sub": user.email})
+    response = RedirectResponse(url="/landing", status_code=status.HTTP_302_FOUND)
+    response.set_cookie(key="access_token", value=f"Bearer {token}", httponly=True)
+    return response
+
+# Logout route
+@app.get("/logout")
+async def logout(request: Request):
+    response = RedirectResponse(url="/")
+    response.delete_cookie("access_token")
+    return response
+
+# Landing page
+@app.get("/landing", response_class=HTMLResponse)
+async def landing(request: Request, db: Session = Depends(get_db)):
+    user_authenticated = is_user_authenticated(request)
+    if not user_authenticated:
+        return RedirectResponse(url="/login")
+
+    try:
+        token = request.cookies.get("access_token")
+        payload = verify_jwt_token(token.split(" ")[1])
+        user_email = payload.get("sub")
+        user = get_user_by_email(db, user_email)
+
+        if not user:
+            return RedirectResponse(url="/login")
+
+        user_links = db.query(URL).filter(URL.user_id == user.id).order_by(URL.id.desc()).limit(5).all()
+
+        return templates.TemplateResponse(
+            "landing.html",
+            {
+                "request": request,
+                "user": user,
+                "links": user_links,
+                "user_authenticated": user_authenticated,
+            }
+        )
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return RedirectResponse(url="/login")
+
+# URL redirection route
 @app.get("/{short_url}")
 async def redirect_to_original(short_url: str, db: Session = Depends(get_db)):
-    # Fetch the original URL from the database
     original_url = get_url(db=db, short_url=short_url)
 
     if not original_url:
         return {"error": "Shortened URL not found"}
-    
-    # Redirect to the original URL
+
     return RedirectResponse(url=original_url)

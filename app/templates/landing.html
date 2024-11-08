@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Welcome, {{ user.nickname or user.email}}</h1>
+
+    <!-- Form to create a new shortened URL -->
+    <form action="/shorten/" method="post" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="original_url" class="form-control" placeholder="Enter URL to shorten" required>
+            <button type="submit" class="btn btn-primary">Shorten URL</button>
+        </div>
+    </form>
+
+    <!-- Search bar -->
+    <div class="mb-3">
+        <input type="text" id="search-bar" class="form-control" placeholder="Search by original or short URL">
+    </div>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% else %}
+    <!-- Table of user links -->
+    <div class="table-responsive">
+        <table id="links-table" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Original URL</th>
+                    <th>Short URL</th>
+                    <th>Clicks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                    <tr>
+                        <td>{{ link.original_url }}</td>
+                        <td><a href="/{{ link.short_url }}" target="_blank">{{ link.short_url }}</a></td>
+                        <td>{{ link.clicks }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <button id="prev-page" class="btn btn-secondary">Previous</button>
+        <span id="page-number">1</span>
+        <button id="next-page" class="btn btn-secondary">Next</button>
+    </div>
+</div>
+{% endif %}
+<script src="/static/scripts.js"></script>
+{% endblock %}
